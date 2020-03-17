@@ -1,0 +1,27 @@
+#
+#
+#
+
+# Clock ###########################################################################################
+
+NET "clock50" LOC="P55" | IOSTANDARD = LVCMOS33 | PERIOD=20ns;
+
+# Video ###########################################################################################
+
+NET "stdn<1>"  LOC="P66" | IOSTANDARD = LVCMOS33; # 01 = PAL, 10 = NTSC, 11 disable
+NET "stdn<0>"  LOC="P67" | IOSTANDARD = LVCMOS33;
+
+NET "sync<1>"  LOC="P85" | IOSTANDARD = LVCMOS33 | SLEW=FAST; # vs
+NET "sync<0>"  LOC="P87" | IOSTANDARD = LVCMOS33 | SLEW=FAST; # hs
+
+NET "rgb<8>"   LOC="P81" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
+NET "rgb<7>"   LOC="P80" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
+NET "rgb<6>"   LOC="P79" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
+NET "rgb<5>"   LOC="P84" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
+NET "rgb<4>"   LOC="P83" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
+NET "rgb<3>"   LOC="P82" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
+NET "rgb<2>"   LOC="P93" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
+NET "rgb<1>"   LOC="P92" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
+NET "rgb<0>"   LOC="P88" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
+
+###################################################################################################
