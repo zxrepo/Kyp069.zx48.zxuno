@@ -13,6 +13,11 @@ module zx48
 
 	input  wire[1:0]  ps2,
 
+	output wire       spiCs,
+	output wire       spiCk,
+	output wire       spiDi,
+	input  wire       spiDo,
+
 	output wire       ramWe,
 	inout  wire[ 7:0] ramD,
 	output wire[20:0] ramA
@@ -44,7 +49,7 @@ cpu Cpu
 	.iorq    (iorq    ),
 	.nmi     (nmi     ),
 	.int     (int     ),
-	.m1      (        ),
+	.m1      (m1      ),
 	.rd      (rd      ),
 	.wr      (wr      ),
 	.di      (di      ),
@@ -93,25 +98,6 @@ audio Audio
 
 //-----------------------------------------------------------------------------
 
-wire memWe = !(!mreq && !wr);
-wire[7:0] memDo;
-
-memory Memory
-(
-	.clock   (vmmClock),
-	.cpuWe   (memWe   ),
-	.cpuDo   (memDo   ),
-	.cpuDi   (do      ),
-	.cpuA    (a       ),
-	.vmmDo   (vmmDo   ),
-	.vmmA    (vmmA    ),
-	.ramWe   (ramWe   ),
-	.ramD    (ramD    ),
-	.ramA    (ramA    )
-);
-
-//-----------------------------------------------------------------------------
-
 wire[4:0] keyDo;
 wire[7:0] keyA = a[15:8];
 
@@ -127,8 +113,73 @@ keyboard Keyboard
 
 //-----------------------------------------------------------------------------
 
+wire[3:0] divPage;
+
+div Div
+(
+	.clock   (cpuClock),
+	.reset   (reset   ),
+	.mreq    (mreq    ),
+	.iorq    (iorq    ),
+	.m1      (m1      ),
+	.wr      (wr      ),
+	.d       (do      ),
+	.a       (a       ),
+	.map     (divMap  ),
+	.ram     (divRam  ),
+	.page    (divPage )
+);
+
+//-----------------------------------------------------------------------------
+
+wire ioEB = !iorq && a[7:0] == 8'hEB;
+
+wire[7:0] mmcDo;
+wire[7:0] mmcA = a[7:0];
+
+mmc Mmc
+(
+	.clock   (vmmClock),
+	.iorq    (iorq    ),
+	.wr      (wr      ),
+	.rd      (rd      ),
+	.di      (do      ),
+	.do      (mmcDo   ),
+	.a       (mmcA    ),
+	.spiCs   (spiCs   ),
+	.spiCk   (spiCk   ),
+	.spiDo   (spiDo   ),
+	.spiDi   (spiDi   )
+);
+
+//-----------------------------------------------------------------------------
+
+wire memWe = !(!mreq && !wr);
+wire[7:0] memDo;
+
+memory Memory
+(
+	.cpuClock(cpuClock),
+	.cpuWe   (memWe   ),
+	.cpuDo   (memDo   ),
+	.cpuDi   (do      ),
+	.cpuA    (a       ),
+	.vmmClock(vmmClock),
+	.vmmDo   (vmmDo   ),
+	.vmmA    (vmmA    ),
+	.divMap  (divMap  ),
+	.divRam  (divRam  ),
+	.divPage (divPage ),
+	.ramWe   (ramWe   ),
+	.ramD    (ramD    ),
+	.ramA    (ramA    )
+);
+
+//-----------------------------------------------------------------------------
+
 assign di
 	= ioFE  && !rd ? { 1'b1, !ear, 1'b1, keyDo }
+	: ioEB  && !rd ? mmcDo
 	: !mreq && !rd ? memDo
 	: 8'hFF;
 

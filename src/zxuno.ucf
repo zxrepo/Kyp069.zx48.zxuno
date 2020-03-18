@@ -36,6 +36,13 @@ NET "audio<0>" LOC="P10"  | IOSTANDARD = LVCMOS33 | SLEW=FAST; # left
 NET "ps2<1>"   LOC="P98"  | IOSTANDARD = LVCMOS33 | SLEW=FAST | PULLUP; # keyboard data
 NET "ps2<0>"   LOC="P99"  | IOSTANDARD = LVCMOS33 | SLEW=FAST | PULLUP; # keyboard clock
 
+# SD/MMC ##########################################################################################
+
+NET "spiCs"    LOC="P59"  | IOSTANDARD = LVCMOS33 | SLEW=FAST; # cs
+NET "spiCk"    LOC="P75"  | IOSTANDARD = LVCMOS33 | SLEW=FAST; # clock
+NET "spiDi"    LOC="P74"  | IOSTANDARD = LVCMOS33 | SLEW=FAST; # di
+NET "spiDo"    LOC="P78"  | IOSTANDARD = LVCMOS33 | SLEW=FAST; # do
+
 # SRAM ############################################################################################
 
 NET "ramWe"    LOC="P121" | IOSTANDARD = LVCMOS33 | SLEW=FAST;
