@@ -8,6 +8,11 @@ module zx48
 	output wire[ 1:0] sync,
 	output wire[ 8:0] rgb,
 
+	output wire[ 1:0] audio,
+	input  wire       ear,
+
+	input  wire[1:0]  ps2,
+
 	output wire       ramWe,
 	inout  wire[ 7:0] ramD,
 	output wire[20:0] ramA
@@ -18,21 +23,12 @@ module zx48
 clock Clock
 (
 	.i       (clock50 ),
-	.o1400   (co1400  ),
 	.o0700   (co0700  ),
 	.o0350   (co0350  )
 );
 
-BUFG bufg1400(.I(co1400), .O(memClock));
 BUFG bufg0700(.I(co0700), .O(vmmClock));
 BUFG bufg0350(.I(co0350), .O(cpuClock));
-
-//-----------------------------------------------------------------------------
-
-reg[5:0] rc;
-always @(posedge cpuClock) if(!rc[5]) rc <= rc+6'd1;
-
-wire reset = rc[5];
 
 //-----------------------------------------------------------------------------
 
@@ -46,7 +42,7 @@ cpu Cpu
 	.reset   (reset   ),
 	.mreq    (mreq    ),
 	.iorq    (iorq    ),
-	.nmi     (1'b1    ),
+	.nmi     (nmi     ),
 	.int     (int     ),
 	.m1      (        ),
 	.rd      (rd      ),
@@ -60,9 +56,11 @@ cpu Cpu
 
 wire ioFE = !iorq && !a[0];
 
+reg mic;
+reg speaker;
 reg[2:0] border;
 
-always @(posedge cpuClock) if(ioFE && !wr) border <= do[2:0];
+always @(posedge cpuClock) if(ioFE && !wr) { speaker, mic, border } <= do[4:0];
 
 //-----------------------------------------------------------------------------
 
@@ -83,12 +81,24 @@ video Video
 
 //-----------------------------------------------------------------------------
 
+audio Audio
+(
+	.clock   (vmmClock),
+	.reset   (reset   ),
+	.speaker (speaker ),
+	.mic     (mic     ),
+	.ear     (ear     ),
+	.audio   (audio   )
+);
+
+//-----------------------------------------------------------------------------
+
 wire memWe = !(!mreq && !wr);
 wire[7:0] memDo;
 
 memory Memory
 (
-	.clock   (memClock),
+	.clock   (vmmClock),
 	.cpuWe   (memWe   ),
 	.cpuDo   (memDo   ),
 	.cpuDi   (do      ),
@@ -102,8 +112,24 @@ memory Memory
 
 //-----------------------------------------------------------------------------
 
+wire[4:0] keyDo;
+wire[7:0] keyA = a[15:8];
+
+keyboard Keyboard
+(
+	.clock  (vmmClock),
+	.ps2    (ps2     ),
+	.reset  (reset   ),
+	.nmi    (nmi     ),
+	.do     (keyDo   ),
+	.a      (keyA    )
+);
+
+//-----------------------------------------------------------------------------
+
 assign di
-	= !mreq && !rd ? memDo
+	= ioFE  && !rd ? { 1'b1, !ear, 1'b1, keyDo }
+	: !mreq && !rd ? memDo
 	: 8'hFF;
 
 //-------------------------------------------------------------------------------------------------
