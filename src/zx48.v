@@ -61,11 +61,17 @@ cpu Cpu
 
 wire ioFE = !iorq && !a[0];
 
-reg mic;
 reg speaker;
 reg[2:0] border;
 
-always @(posedge cpuClock) if(ioFE && !wr) { speaker, mic, border } <= do[4:0];
+always @(posedge cpuClock) if(ioFE && !wr) { speaker, border } <= { do[4], do[2:0] };
+
+//-----------------------------------------------------------------------------
+
+wire ioDF = !iorq && a[7:4] == 4'b1101;
+
+reg[7:0] specdrum;
+always @(posedge cpuClock) if(ioDF && !wr) specdrum <= do;
 
 //-----------------------------------------------------------------------------
 
@@ -90,6 +96,7 @@ audio Audio
 (
 	.clock   (vmmClock),
 	.reset   (reset   ),
+	.specdrum(specdrum),
 	.speaker (speaker ),
 	.mic     (mic     ),
 	.ear     (ear     ),
