@@ -1,4 +1,14 @@
 //-------------------------------------------------------------------------------------------------
+// ZX48: ZX Spectrum 48K implementation by Kyp
+// https://github.com/Kyp069/zx48
+//-------------------------------------------------------------------------------------------------
+// Z80 chip module implementation by Sorgelig for Mist.
+// https://github.com/sorgelig/ZX_Spectrum-128K_MIST
+//-------------------------------------------------------------------------------------------------
+// AY chip module implementation by Miguel Angel Rodriguez Jodar's for ZX-Uno.
+// Unused ports removed and audio ports renamed.
+// https://github.com/mcleod-ideafix/zxuno_spectrum_core
+//-------------------------------------------------------------------------------------------------
 module zx48
 //-------------------------------------------------------------------------------------------------
 (
@@ -29,11 +39,13 @@ clock Clock
 (
 	.i       (clock50 ),
 	.o0700   (co0700  ),
-	.o0350   (co0350  )
+	.o0350   (co0350  ),
+	.o0175   (co0175  )
 );
 
 BUFG bufg0700(.I(co0700), .O(vmmClock));
 BUFG bufg0350(.I(co0350), .O(cpuClock));
+BUFG bufg0175(.I(co0175), .O(psgClock));
 
 //-----------------------------------------------------------------------------
 
@@ -61,10 +73,11 @@ cpu Cpu
 
 wire ioFE = !iorq && !a[0];
 
+reg mic;
 reg speaker;
 reg[2:0] border;
 
-always @(posedge cpuClock) if(ioFE && !wr) { speaker, border } <= { do[4], do[2:0] };
+always @(posedge cpuClock) if(ioFE && !wr) { speaker, mic, border } <= do[4:0];
 
 //-----------------------------------------------------------------------------
 
@@ -72,6 +85,35 @@ wire ioDF = !iorq && a[7:4] == 4'b1101;
 
 reg[7:0] specdrum;
 always @(posedge cpuClock) if(ioDF && !wr) specdrum <= do;
+
+//-----------------------------------------------------------------------------
+
+wire ioFFFD = !iorq && a[15:14] == 2'b11 && a[1];
+
+wire[7:0] psgA;
+wire[7:0] psgB;
+wire[7:0] psgC;
+wire[7:0] psgDo;
+
+wire psgOe;
+wire bdir = !iorq && a[15] && a[1:0] == 2'b01 && !wr;
+wire bc1  = !iorq && a[15] && a[1:0] == 2'b01 && a[14];
+
+ay_3_8192 Psg
+(
+	.clock   (psgClock),
+	.clken   (1'b1    ),
+	.reset   (reset   ),
+	.bdir    (bdir    ),
+	.bc1     (bc1     ),
+	.bc2     (1'b1    ),
+	.a8      (1'b1    ),
+	.di      (do      ),
+	.do      (psgDo   ),
+	.a       (psgA    ),
+	.b       (psgB    ),
+	.c       (psgC    )
+);
 
 //-----------------------------------------------------------------------------
 
@@ -100,6 +142,9 @@ audio Audio
 	.speaker (speaker ),
 	.mic     (mic     ),
 	.ear     (ear     ),
+	.a       (psgA    ),
+	.b       (psgB    ),
+	.c       (psgC    ),
 	.audio   (audio   )
 );
 
@@ -187,6 +232,7 @@ memory Memory
 assign di
 	= ioFE  && !rd ? { 1'b1, !ear, 1'b1, keyDo }
 	: ioEB  && !rd ? mmcDo
+	: ioFFFD && !rd ? psgDo
 	: !mreq && !rd ? memDo
 	: 8'hFF;
 

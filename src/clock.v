@@ -4,7 +4,8 @@ module clock
 (
 	input  wire i,     // 50.000 MHz
 	output wire o0700, //  7.000 MHz
-	output wire o0350  //  3.500 MHz
+	output wire o0350, //  3.500 MHz
+	output wire o0175  //  1.750 MHz
 );
 
 IBUFG IBufg
@@ -41,11 +42,12 @@ Pll
 	.LOCKED            ()
 );
 
-reg[2:0] cd;
-always @(posedge co) cd <= cd+3'd1;
+reg[3:0] cd;
+always @(posedge co) cd <= cd+4'd1;
 
 assign o0700 = cd[1];
 assign o0350 = cd[2];
+assign o0175 = cd[3];
 
 //-------------------------------------------------------------------------------------------------
 endmodule
