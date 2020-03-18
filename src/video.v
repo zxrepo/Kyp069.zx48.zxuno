@@ -7,6 +7,7 @@ module video
 	output wire[ 1:0] stdn,
 	output wire[ 1:0] sync,
 	output wire[ 8:0] rgb,
+	output wire       int,
 	input  wire[ 7:0] d,
 	output wire[12:0] a
 );
@@ -58,6 +59,8 @@ wire i = attrOutput[6];
 assign stdn = 2'b01; // PAL
 assign sync = { 1'b1, ~(v|h) };
 assign rgb = { videoBlank ? 9'd0 : i ? { r,r,r, g,g,g, b,b,b } : { r,1'b0,r, g,1'b0,g, b,1'b0,b } };
+
+assign int = !(vCount == 248 && hCount >= 2 && hCount <= 65);
 
 assign a = { !hCount[1] ? { vCount[7:6], vCount[2:0] } : { 3'b110, vCount[7:6] }, vCount[5:3], hCount[7:4], hCount[2] };
 
