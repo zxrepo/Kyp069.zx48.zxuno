@@ -43,10 +43,6 @@ clock Clock
 	.o0175   (co0175  )
 );
 
-BUFG bufg0700(.I(co0700), .O(vmmClock));
-BUFG bufg0350(.I(co0350), .O(cpuClock));
-BUFG bufg0175(.I(co0175), .O(psgClock));
-
 //-----------------------------------------------------------------------------
 
 wire[ 7:0] di;
@@ -55,7 +51,7 @@ wire[15:0] a;
 
 cpu Cpu
 (
-	.clock   (vmmClock), // 2x
+	.clock   (cpuClock),
 	.reset   (reset   ),
 	.mreq    (mreq    ),
 	.iorq    (iorq    ),
@@ -71,24 +67,24 @@ cpu Cpu
 
 //-----------------------------------------------------------------------------
 
-wire ioFE = !iorq && !a[0];
+wire ioUla = !(!iorq && !a[0]);
 
 reg mic;
 reg speaker;
 reg[2:0] border;
 
-always @(posedge cpuClock) if(ioFE && !wr) { speaker, mic, border } <= do[4:0];
+always @(posedge cpuClock) if(!ioUla && !wr) { speaker, mic, border } <= do[4:0];
 
 //-----------------------------------------------------------------------------
 
-wire ioDF = !iorq && a[7:4] == 4'b1101;
+wire ioSpd = !(!iorq && a[7:4] == 4'b1101);
 
 reg[7:0] specdrum;
-always @(posedge cpuClock) if(ioDF && !wr) specdrum <= do;
+always @(posedge cpuClock) if(!ioSpd && !wr) specdrum <= do;
 
 //-----------------------------------------------------------------------------
 
-wire ioFFFD = !iorq && a[15:14] == 2'b11 && a[1];
+wire ioPsg = !(!iorq && a[15:14] == 2'b11 && !a[1]);
 
 wire[7:0] psgA;
 wire[7:0] psgB;
@@ -124,6 +120,8 @@ video Video
 (
 	.clock   (vmmClock),
 	.border  (border  ),
+	.busy    (busy    ),
+	.read    (read    ),
 	.stdn    (stdn    ),
 	.sync    (sync    ),
 	.rgb     (rgb     ),
@@ -184,7 +182,7 @@ div Div
 
 //-----------------------------------------------------------------------------
 
-wire ioEB = !iorq && a[7:0] == 8'hEB;
+wire ioMmc = !(!iorq && a[7:0] == 8'hEB);
 
 wire[7:0] mmcDo;
 wire[7:0] mmcA = a[7:0];
@@ -229,11 +227,23 @@ memory Memory
 
 //-----------------------------------------------------------------------------
 
+wire causeContention = !(a[15:14] == 2'b01 || !ioUla);
+
+reg cancelContention = 1'b1;
+always @(negedge cpuClock) cancelContention = !mreq || !ioUla;
+
+BUFG bufg0700(.I(co0700), .O(vmmClock));
+BUFG bufg0175(.I(co0175), .O(psgClock));
+BUFGCE_1 bufgce(.I(co0700), .O(cpuClock), .CE(busy|causeContention|cancelContention));
+
+//-----------------------------------------------------------------------------
+
 assign di
-	= ioFE  && !rd ? { 1'b1, !ear, 1'b1, keyDo }
-	: ioEB  && !rd ? mmcDo
-	: ioFFFD && !rd ? psgDo
-	: !mreq && !rd ? memDo
+	= !mreq  && !rd ? memDo
+	: !ioUla && !rd ? { 1'b1, !ear, 1'b1, keyDo }
+	: !ioPsg && !rd ? psgDo
+	: !ioMmc && !rd ? mmcDo
+	: !iorq  && !rd && read ? vmmDo
 	: 8'hFF;
 
 //-------------------------------------------------------------------------------------------------
