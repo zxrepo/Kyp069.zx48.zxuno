@@ -27,10 +27,8 @@ module ay_3_8192 (
   input  wire       clock,
   input  wire       clken,
   input  wire       reset,
-  input  wire       a8,
   input  wire       bdir,
   input  wire       bc1,
-  input  wire       bc2,
   input  wire [7:0] di,
   output reg  [7:0] do,
   output reg  [7:0] a,
@@ -97,12 +95,9 @@ module ay_3_8192 (
       envelope_shape  <= 4'b0000;
     end
     else begin  
-      if (a8 == 1'b1) begin
-        case ({bdir,bc2,bc1})
-          3'b001,
-          3'b100,
-          3'b111: regaddr <= di;  // latch PSG register address (all of it, including bits that are not used in register selection)
-          3'b110: 
+        case ({bdir,bc1})
+          2'b11: regaddr <= di;  // latch PSG register address (all of it, including bits that are not used in register selection)
+          2'b10: 
             begin // write to currently addressed PSG register
               if (regaddr[7:4] == 4'b0000) begin
                 case (regaddr[3:0])
@@ -124,13 +119,12 @@ module ay_3_8192 (
               end
             end
         endcase
-      end
     end
   end
   
   reg reset_envelope;
   always @* begin
-    if (a8 == 1'b1 && {bdir,bc2,bc1} == 3'b110 && regaddr == 8'd13)
+    if ({bdir,bc1} == 2'b10 && regaddr == 8'd13)
       reset_envelope = 1'b1;
     else
       reset_envelope = 1'b0;
@@ -139,8 +133,7 @@ module ay_3_8192 (
   // CPU reads
   always @* begin
     do = 8'hFF;
-    if (a8 == 1'b1) begin
-      if ({bdir,bc2,bc1} == 3'b011) begin
+      if ({bdir,bc1} == 2'b01) begin
         if (regaddr[7:4] == 4'b0000) begin
           case (regaddr[3:0])
             4'd0 : do = period_a[7:0];
@@ -161,7 +154,6 @@ module ay_3_8192 (
           endcase
         end
       end
-    end
   end
   
   ////////////// Tone and noise generation /////////////////////////////////////////

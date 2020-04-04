@@ -69,11 +69,10 @@ cpu Cpu
 
 wire ioUla = !(!iorq && !a[0]);
 
-reg mic;
 reg speaker;
 reg[2:0] border;
 
-always @(posedge cpuClock) if(!ioUla && !wr) { speaker, mic, border } <= do[4:0];
+always @(posedge cpuClock) if(!ioUla && !wr) { speaker, border } <= { do[4], do[2:0]};
 
 //-----------------------------------------------------------------------------
 
@@ -102,8 +101,6 @@ ay_3_8192 Psg
 	.reset   (reset   ),
 	.bdir    (bdir    ),
 	.bc1     (bc1     ),
-	.bc2     (1'b1    ),
-	.a8      (1'b1    ),
 	.di      (do      ),
 	.do      (psgDo   ),
 	.a       (psgA    ),
@@ -138,8 +135,6 @@ audio Audio
 	.reset   (reset   ),
 	.specdrum(specdrum),
 	.speaker (speaker ),
-	.mic     (mic     ),
-	.ear     (ear     ),
 	.a       (psgA    ),
 	.b       (psgB    ),
 	.c       (psgC    ),
