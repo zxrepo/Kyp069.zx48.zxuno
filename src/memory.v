@@ -35,7 +35,7 @@ rom #(.AW(14), .FN("48k.hex")) Rom // "48k", "brendan alford zx 036" "retroleum 
 wire[ 7:0] divDo;
 wire[12:0] divA = cpuA[12:0];
 
-rom #(.AW(13), .FN("esxdos mmc 086.hex")) DivRom
+rom #(.AW(13), .FN("esxdos mmc 087.hex")) DivRom
 (
 	.clock   (cpuClock),
 	.do      (divDo),
