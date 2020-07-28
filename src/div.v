@@ -3,6 +3,7 @@ module div
 //-------------------------------------------------------------------------------------------------
 (
 	input  wire       clock,
+	input  wire       ce,
 	input  wire       reset,
 	input  wire       mreq,
 	input  wire       iorq,
@@ -21,7 +22,7 @@ reg mapram = 1'b0;
 reg m1on = 1'b0;
 reg [3:0] mappage;
 
-always @(posedge clock)
+always @(posedge clock) if(ce)
 begin
 	if(!reset)
 	begin

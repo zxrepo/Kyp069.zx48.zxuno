@@ -3,6 +3,7 @@ module keyboard
 //-------------------------------------------------------------------------------------------------
 (
 	input  wire      clock,
+	input  wire      ce,
 	input  wire[1:0] ps2,
 	output wire      reset,
 	output wire      nmi,
@@ -17,7 +18,7 @@ reg      ps2d;
 reg      ps2e;
 reg[7:0] ps2f;
 
-always @(posedge clock)
+always @(posedge clock) if(ce)
 begin
 	ps2d <= ps2[1];
 	ps2e <= 1'b0;
@@ -40,7 +41,7 @@ reg[8:0] data;
 reg[3:0] count;
 reg[7:0] scancode;
 
-always @(posedge clock)
+always @(posedge clock) if(ce)
 begin
 	received <= 1'b0;
 
@@ -89,7 +90,7 @@ initial begin
 	F12 = 1'b1;
 end
 
-always @(posedge clock)
+always @(posedge clock) if(ce)
 if(received)
 	if(scancode == 8'hF0) pressed <= 1'b1; // released
 	else

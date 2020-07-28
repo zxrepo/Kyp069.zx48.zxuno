@@ -2,12 +2,13 @@
 module memory
 //-------------------------------------------------------------------------------------------------
 (
-	input  wire       cpuClock,
+	input  wire       clock,
+	input  wire       cpuCe,
 	input  wire       cpuWe,
 	output wire[ 7:0] cpuDo,
 	input  wire[ 7:0] cpuDi,
 	input  wire[15:0] cpuA,
-	input  wire       vmmClock,
+	input  wire       vmmCe,
 	output wire[ 7:0] vmmDo,
 	input  wire[12:0] vmmA,
 	input  wire       divMap,
@@ -25,9 +26,10 @@ wire[13:0] romA = cpuA[13:0];
 
 rom #(.AW(14), .FN("48k.hex")) Rom // "48k", "brendan alford zx 036" "retroleum diagrom v24"
 (
-	.clock (cpuClock),
-	.do    (romDo),
-	.a     (romA )
+	.clock(clock),
+	.ce   (cpuCe),
+	.do   (romDo),
+	.a    (romA )
 );
 
 //-----------------------------------------------------------------------------
@@ -37,9 +39,10 @@ wire[12:0] divA = cpuA[12:0];
 
 rom #(.AW(13), .FN("esxdos mmc 087.hex")) DivRom
 (
-	.clock   (cpuClock),
-	.do      (divDo),
-	.a       (divA )
+	.clock(clock),
+	.ce   (cpuCe),
+	.do   (divDo),
+	.a    (divA )
 );
 
 //-----------------------------------------------------------------------------
@@ -49,13 +52,14 @@ wire[12:0] a1 = cpuA[12:0];
 
 vmm #(.AW(13)) Vmm
 (
-	.clock1(cpuClock),
-	.we    (we      ),
-	.di    (cpuDi   ),
-	.a1    (a1      ),
-	.clock2(vmmClock),
-	.do    (vmmDo   ),
-	.a2    (vmmA    )
+	.clock(clock),
+	.ce1  (cpuCe),
+	.we   (we   ),
+	.di   (cpuDi),
+	.a1   (a1   ),
+	.ce2  (vmmCe),
+	.do   (vmmDo),
+	.a2   (vmmA )
 );
 
 //-----------------------------------------------------------------------------

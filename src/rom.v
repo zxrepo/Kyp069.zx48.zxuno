@@ -10,6 +10,7 @@ module rom #
 )
 (
 	input  wire         clock,
+	input  wire         ce,
 	output reg [DW-1:0] do,
 	input  wire[AW-1:0] a
 );
@@ -17,6 +18,6 @@ module rom #
 reg[DW-1:0] d[(2**AW)-1:0];
 initial $readmemh(FN, d, 0);
 
-always @(posedge clock) do <= d[a];
+always @(posedge clock) if(ce) do <= d[a];
 
 endmodule

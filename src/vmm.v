@@ -7,19 +7,20 @@ module vmm
 	parameter AW = 13
 )
 (
-	input  wire         clock1,
+	input  wire         clock,
+	input  wire         ce1,
 	input  wire         we,
 	input  wire[   7:0] di,
 	input  wire[AW-1:0] a1,
-	input  wire         clock2,
+	input  wire         ce2,
 	output reg [   7:0] do,
 	input  wire[AW-1:0] a2
 );
 
 reg[7:0] d[(2**AW)-1:0];
 
-always @(posedge clock1) if(!we) d[a1] <= di;
-always @(posedge clock2) do <= d[a2];
+always @(posedge clock) if(ce1) if(!we) d[a1] <= di;
+always @(posedge clock) if(ce2) do <= d[a2];
 
 //-------------------------------------------------------------------------------------------------
 endmodule

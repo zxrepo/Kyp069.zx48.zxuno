@@ -12,19 +12,17 @@ module audio
 	output wire[1:0] audio
 );
 
-reg[7:0] lmix;
-reg[7:0] rmix;
 reg[1:0] source;
-always @(posedge clock)
-begin
-	source <= source+2'd1;
-	case(source)
-	0: { lmix, rmix } <= { 2{{ 1'b0, { 7{speaker} } }} };
-	1: { lmix, rmix } <= { 2{specdrum} };
-	2: { lmix, rmix } <= { a, b };
-	3: { lmix, rmix } <= { 2{c} };
-	endcase
-end
+always @(posedge clock) source <= source+2'd1;
+
+wire[7:0] lmix;
+wire[7:0] rmix;
+
+assign { lmix, rmix }
+	= source == 0 ? { 2{{ 1'b0, { 7{speaker} } }} }
+	: source == 1 ? { 2{specdrum} }
+	: source == 2 ? { a, b }
+	:               { 2{c} };
 
 dac LDac
 (

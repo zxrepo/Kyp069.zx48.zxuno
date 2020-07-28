@@ -3,6 +3,8 @@ module cpu
 //-------------------------------------------------------------------------------------------------
 (
 	input  wire       clock,
+	input  wire       cep,
+	input  wire       cen,
 	input  wire       reset,
 	output wire       mreq,
 	output wire       iorq,
@@ -19,8 +21,8 @@ module cpu
 T80pa Cpu
 (
 	.CLK    (clock),
-	.CEN_p  (1'b1 ),
-	.CEN_n  (1'b1 ),
+	.CEN_p  (cep  ),
+	.CEN_n  (cen  ),
 	.RESET_n(reset),
 	.BUSRQ_n(1'b1 ),
 	.WAIT_n (1'b1 ),

@@ -3,6 +3,8 @@ module mmc
 //-------------------------------------------------------------------------------------------------
 (
 	input  wire      clock,
+	input  wire      cep,
+	input  wire      cen,
 	input  wire      iorq,
 	input  wire      wr,
 	input  wire      rd,
@@ -18,7 +20,7 @@ module mmc
 //-----------------------------------------------------------------------------
 
 reg cs;
-always @(posedge clock) if(!iorq && !wr && a == 8'hE7) cs <= di[0];
+always @(posedge clock) if(cep) if(!iorq && !wr && a == 8'hE7) cs <= di[0];
 
 //-----------------------------------------------------------------------------
 
@@ -28,7 +30,7 @@ wire iorx = !iorq && !rd && a == 8'hEB;
 reg tx, dtx;
 reg rx, drx;
 
-always @(posedge clock)
+always @(posedge clock) if(cep)
 begin
 	tx <= 1'b0;
 	dtx <= iotx;
@@ -45,7 +47,7 @@ reg[7:0] cpud;
 reg[7:0] spid;
 reg[4:0] count = 5'b10000;
 
-always @(negedge clock)
+always @(posedge clock) if(cen)
 	if(count[4])
 	begin
 		if(tx || rx)

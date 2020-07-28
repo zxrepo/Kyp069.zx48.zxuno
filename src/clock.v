@@ -2,17 +2,13 @@
 module clock
 //-------------------------------------------------------------------------------------------------
 (
-	input  wire i,     // 50.000 MHz
-	output wire o0700, //  7.000 MHz
-	output wire o0350, //  3.500 MHz
-	output wire o0175  //  1.750 MHz
+	input  wire i, // 50.000 MHz
+	output wire o  // 28.000 MHz
 );
+//-------------------------------------------------------------------------------------------------
 
-IBUFG IBufg
-(
-	.I(i),
-	.O(ci)
-);
+IBUFG IBufg(.I(i), .O(ci));
+
 PLL_BASE #
 (
 	.BANDWIDTH         ("OPTIMIZED"),
@@ -42,12 +38,7 @@ Pll
 	.LOCKED            ()
 );
 
-reg[3:0] cd;
-always @(posedge co) cd <= cd+4'd1;
-
-assign o0700 = cd[1];
-assign o0350 = cd[2];
-assign o0175 = cd[3];
+BUFG  Bufg (.I(co), .O(o));
 
 //-------------------------------------------------------------------------------------------------
 endmodule
