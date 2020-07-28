@@ -125,24 +125,54 @@ wire psgOe;
 wire bdir = !ioPsg && !wr;
 wire bc1  = !ioPsg && a[14] && (!rd || !wr);
 
-wire[7:0] psgDo;
-wire[7:0] psgA;
-wire[7:0] psgB;
-wire[7:0] psgC;
+reg psgSel;
+always @(posedge clock) if(!reset) psgSel <= 1'b0; else if(bdir && bc1 && do[4]) psgSel <= ~do[0];
 
-ay_3_8192 Psg
+wire bdir1 = !psgSel ? bdir : 1'b0;
+wire bdir2 =  psgSel ? bdir : 1'b0;
+
+wire bc11 = !psgSel ? bc1 : 1'b0;
+wire bc12 =  psgSel ? bc1 : 1'b0;
+
+wire[7:0] psgA1;
+wire[7:0] psgB1;
+wire[7:0] psgC1;
+wire[7:0] psgDo1;
+
+ay_3_8192 Psg1
 (
 	.clock  (clock  ),
 	.clken  (ce17p  ),
 	.reset  (reset  ),
-	.bdir   (bdir   ),
-	.bc1    (bc1    ),
+	.bdir   (bdir1  ),
+	.bc1    (bc11   ),
 	.di     (do     ),
-	.do     (psgDo  ),
-	.a      (psgA   ),
-	.b      (psgB   ),
-	.c      (psgC   )
+	.do     (psgDo1 ),
+	.a      (psgA1  ),
+	.b      (psgB1  ),
+	.c      (psgC1  )
 );
+
+wire[7:0] psgA2;
+wire[7:0] psgB2;
+wire[7:0] psgC2;
+wire[7:0] psgDo2;
+
+ay_3_8192 Psg2
+(
+	.clock  (clock  ),
+	.clken  (ce17p  ),
+	.reset  (reset  ),
+	.bdir   (bdir2  ),
+	.bc1    (bc12   ),
+	.di     (do     ),
+	.do     (psgDo2 ),
+	.a      (psgA2  ),
+	.b      (psgB2  ),
+	.c      (psgC2  )
+);
+
+wire[7:0] psgDo = !psgSel ? psgDo1 : psgDo2;
 
 //-----------------------------------------------------------------------------
 
@@ -172,9 +202,12 @@ audio Audio
 	.reset   (reset   ),
 	.specdrum(specdrum),
 	.speaker (speaker ),
-	.a       (psgA    ),
-	.b       (psgB    ),
-	.c       (psgC    ),
+	.a1      (psgA1   ),
+	.b1      (psgB1   ),
+	.c1      (psgC1   ),
+	.a2      (psgA2   ),
+	.b2      (psgB2   ),
+	.c2      (psgC2   ),
 	.audio   (audio   )
 );
 
