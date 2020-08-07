@@ -1,13 +1,13 @@
 //-------------------------------------------------------------------------------------------------
-// ZX48: ZX Spectrum 48K implementation by Kyp
+// ZX48: ZX Spectrum 48K implementation for ZX-Uno board by Kyp
 // https://github.com/Kyp069/zx48
 //-------------------------------------------------------------------------------------------------
-// Z80 chip module implementation by Sorgelig for Mist.
+// Z80 chip module implementation by Sorgelig
 // https://github.com/sorgelig/ZX_Spectrum-128K_MIST
 //-------------------------------------------------------------------------------------------------
-// AY chip module implementation by Miguel Angel Rodriguez Jodar's for ZX-Uno.
-// Unused ports removed and audio ports renamed.
+// AY chip module implementation by Miguel Angel Rodriguez Jodar
 // https://github.com/mcleod-ideafix/zxuno_spectrum_core
+// Unused io ports removed and audio ports renamed.
 //-------------------------------------------------------------------------------------------------
 module zx48
 //-------------------------------------------------------------------------------------------------
@@ -42,15 +42,9 @@ clock Clock
 	.o      (clock  )
 );
 
-reg[3:0] cd;
-always @(posedge clock) cd <= cd+4'd1;
-
-wire clock70 = cd[1];
-wire clock35 = cd[2];
-
 
 reg[3:0] ce;
-always @(negedge clock) ce <= ce+4'd1;
+always @(negedge clock) ce <= ce+1'd1;
 
 wire ce14n = ~ce[0];
 wire ce14p =  ce[0];
@@ -184,12 +178,12 @@ video Video
 	.clock  (clock  ),
 	.ce     (ce70n  ),
 	.border (border ),
-	.read   (read   ),
 	.stdn   (stdn   ),
 	.sync   (sync   ),
 	.rgb    (rgb    ),
 	.int    (int    ),
-	.de     (vmmDe  ),
+	.rd     (vmmRd  ),
+	.cn     (vmmCn  ),
 	.d      (vmmDo  ),
 	.a      (vmmA   )
 );
@@ -305,16 +299,13 @@ reg cpuck;
 
 wire iorqula = !(!iorq && !a[0]);
 
-wire nor1 = ~vmmDe | ~cpuck | ~(a[14] | ~iorqula) | ~(~a[15] | ~iorqula) | ~iorqtw3 | ~mreqt23;
-wire nor2 = ~vmmDe | ~cpuck | iorqula | ~iorqtw3;
+wire nor1 = ~vmmCn | ~cpuck | ~(a[14] | ~iorqula) | ~(~a[15] | ~iorqula) | ~iorqtw3 | ~mreqt23;
+//wire nor2 = ~vmmCn | ~cpuck | iorqula | ~iorqtw3;
 
-assign contend = ~nor1 | ~nor2;
+assign contend = ~nor1; // | ~nor2;
 
-// si negedge en iocont salen las bandas de color en su sitio pero una columna más estrecha
 always @(posedge clock) if(ce70n) if(cpuck && !contend) cpuck <= 0; else cpuck <= 1;
 
-// si negedge en iocont salen las bandas de color en su sitio pero una columna más estrecha
-// y las bandas de abajo salen retrasadas tres filas
 always @(posedge clock) if(cc35p)
 begin
 	iorqtw3 <= iorqula;
@@ -328,7 +319,7 @@ assign di
 	: !ioUla && !rd ? { 1'b1, !ear, 1'b1, keyDo }
 	: !ioPsg && !rd && a[14] ? psgDo
 	: !ioMmc && !rd ? mmcDo
-	: !iorq  && !rd && read ? vmmDo
+	: !iorq  && !rd && vmmRd ? vmmDo
 	: 8'hFF;
 
 //-------------------------------------------------------------------------------------------------

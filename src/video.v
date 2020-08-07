@@ -5,12 +5,12 @@ module video
 	input  wire       clock,
 	input  wire       ce,
 	input  wire[ 2:0] border,
-	output wire       read,
 	output wire[ 1:0] stdn,
 	output wire[ 1:0] sync,
 	output wire[ 8:0] rgb,
 	output wire       int,
-	output wire       de,
+	output wire       rd,
+	output wire       cn,
 	input  wire[ 7:0] d,
 	output wire[12:0] a
 );
@@ -59,15 +59,14 @@ wire g = dataSelect ? attrOutput[2] : attrOutput[5];
 wire b = dataSelect ? attrOutput[0] : attrOutput[3];
 wire i = attrOutput[6];
 
-assign read = dataInputLoad || attrInputLoad;
-
 assign stdn = 2'b01; // PAL
 assign sync = { 1'b1, ~(v|h) };
-assign rgb = { videoBlank ? 9'd0 : i ? { r,r,r, g,g,g, b,b,b } : { r,1'b0,r, g,1'b0,g, b,1'b0,b } };
+assign rgb = videoBlank ? 9'd0 : { r,r&i,r, g,g&i,g, b,b&i,b };
 
-assign int = !(vCount == 248 && hCount >= 4 && hCount <= 67);
+assign int = !(vCount == 248 && hCount >= 2 && hCount <= 65);
 
-assign de = (hCount[3] || hCount[2]) && dataEnable;
+assign rd = hCount[3] && dataEnable;
+assign cn = (hCount[3] || hCount[2]) && dataEnable;
 
 assign a = { !hCount[1] ? { vCount[7:6], vCount[2:0] } : { 3'b110, vCount[7:6] }, vCount[5:3], hCount[7:4], hCount[2] };
 
