@@ -14,6 +14,7 @@ module video
 	input  wire[ 7:0] d,
 	output wire[12:0] a
 );
+//-------------------------------------------------------------------------------------------------
 
 reg[8:0] hCount;
 wire hCountReset = hCount >= 447;
@@ -26,11 +27,15 @@ always @(posedge clock) if(ce) if(hCountReset) if(vCountReset) vCount <= 9'd0; e
 reg[4:0] fCount;
 always @(posedge clock) if(ce) if(hCountReset) if(vCountReset) fCount <= fCount+5'd1;
 
+//-------------------------------------------------------------------------------------------------
+
 wire dataEnable = hCount <= 255 && vCount <= 191;
 
 reg videoEnable;
 wire videoEnableLoad = hCount[3];
 always @(posedge clock) if(ce) if(videoEnableLoad) videoEnable <= dataEnable;
+
+//-------------------------------------------------------------------------------------------------
 
 reg[7:0] dataInput;
 wire dataInputLoad = (hCount[3:0] ==  9 || hCount[3:0] == 13) && dataEnable;
@@ -48,6 +53,8 @@ reg[7:0] attrOutput;
 wire attrOutputLoad = hCount[2:0] == 4;
 always @(posedge clock) if(ce) if(attrOutputLoad) attrOutput <= { videoEnable ? attrInput[7:3] : { 2'b00, border }, attrInput[2:0] };
 
+//-------------------------------------------------------------------------------------------------
+
 wire dataSelect = dataOutput[7] ^ (fCount[4] & attrOutput[7]);
 wire videoBlank = (hCount >= 320 && hCount <= 415) || (vCount >= 248 && vCount <= 255);
 
@@ -58,6 +65,8 @@ wire r = dataSelect ? attrOutput[1] : attrOutput[4];
 wire g = dataSelect ? attrOutput[2] : attrOutput[5];
 wire b = dataSelect ? attrOutput[0] : attrOutput[3];
 wire i = attrOutput[6];
+
+//-------------------------------------------------------------------------------------------------
 
 assign stdn = 2'b01; // PAL
 assign sync = { 1'b1, ~(v|h) };

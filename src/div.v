@@ -15,6 +15,7 @@ module div
 	output wire       ram,
 	output wire[ 3:0] page
 );
+//-------------------------------------------------------------------------------------------------
 
 reg forcemap = 1'b0;
 reg automap = 1'b0;
@@ -59,6 +60,8 @@ begin
 		if(m1) automap <= m1on;
 	end
 end
+
+//-------------------------------------------------------------------------------------------------
 
 assign map = forcemap || automap;
 assign ram = mapram;

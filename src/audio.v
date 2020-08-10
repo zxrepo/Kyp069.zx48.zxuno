@@ -14,6 +14,7 @@ module audio
 	input  wire[7:0] c2,
 	output wire[1:0] audio
 );
+//-------------------------------------------------------------------------------------------------
 
 reg[2:0] source;
 always @(posedge clock) if(source == 5) source <= 1'd0; else source <= source+1'd1;
@@ -28,6 +29,8 @@ assign { lmix, rmix }
 	: source == 3 ? { 2{b1} }
 	: source == 4 ? { a2, c2 }
 	:               { 2{b2} };
+
+//-------------------------------------------------------------------------------------------------
 
 dac LDac
 (
