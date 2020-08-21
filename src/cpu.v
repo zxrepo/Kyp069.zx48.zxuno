@@ -6,6 +6,7 @@ module cpu
 	input  wire       cep,
 	input  wire       cen,
 	input  wire       reset,
+	output wire       rfsh,
 	output wire       mreq,
 	output wire       iorq,
 	input  wire       nmi,
@@ -15,8 +16,9 @@ module cpu
 	output wire       rd,
 	input  wire[ 7:0] di,
 	output wire[ 7:0] do,
-	output wire[15:0] a    
+	output wire[15:0] a
 );
+//-------------------------------------------------------------------------------------------------
 
 T80pa Cpu
 (
@@ -28,7 +30,7 @@ T80pa Cpu
 	.WAIT_n (1'b1 ),
 	.BUSAK_n(     ),
 	.HALT_n (     ),
-	.RFSH_n (     ),
+	.RFSH_n (rfsh ),
 	.MREQ_n (mreq ),
 	.IORQ_n (iorq ),
 	.NMI_n  (nmi  ),

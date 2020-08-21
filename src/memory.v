@@ -3,12 +3,14 @@ module memory
 //-------------------------------------------------------------------------------------------------
 (
 	input  wire       clock,
+	input  wire       rfsh,
 	input  wire       cpuCe,
 	input  wire       cpuWe,
 	output wire[ 7:0] cpuDo,
 	input  wire[ 7:0] cpuDi,
 	input  wire[15:0] cpuA,
 	input  wire       vmmCe,
+	input  wire       vmmRd,
 	output wire[ 7:0] vmmDo,
 	input  wire[12:0] vmmA,
 	input  wire       divMap,
@@ -46,36 +48,55 @@ rom #(.AW(13), .FN("esxdos mmc 087.hex")) DivRom
 
 //-------------------------------------------------------------------------------------------------
 
-wire we = !(!cpuWe && cpuA[15:13] == 2'b010);
-wire[12:0] a1 = cpuA[12:0];
+//wire we = !(!cpuWe && cpuA[15:13] == 2'b010);
+//wire[12:0] a1 = cpuA[12:0];
+//
+//vmm #(.AW(13)) Vmm
+//(
+//	.clock(clock),
+//	.ce1  (cpuCe),
+//	.we   (we   ),
+//	.di   (cpuDi),
+//	.a1   (a1   ),
+//	.ce2  (vmmCe),
+//	.do   (vmmDo),
+//	.a2   (vmmA )
+//);
 
-vmm #(.AW(13)) Vmm
+wire sprWe = !(!cpuWe && cpuA[15:14] == 2'b01);
+wire[ 7:0] sprDo;
+wire[13:0] sprA = !rfsh && cpuA[15:14] == 2'b01 ? { 1'b0, vmmA[12:7], cpuA[6:0] } : !vmmRd ? cpuA[13:0] : { 1'b0, vmmA };
+
+spr #(.AW(14)) Vmm
 (
 	.clock(clock),
-	.ce1  (cpuCe),
-	.we   (we   ),
+	.ce   (vmmCe),
+	.we   (sprWe),
 	.di   (cpuDi),
-	.a1   (a1   ),
-	.ce2  (vmmCe),
-	.do   (vmmDo),
-	.a2   (vmmA )
+	.do   (sprDo),
+	.a    (sprA )
 );
 
 //-------------------------------------------------------------------------------------------------
 
+assign vmmDo = sprDo;
 assign cpuDo
 	= cpuA[15:13] == 3'b000 && divMap && !divRam ? divDo
 	: cpuA[15:14] == 2'b00 && !divMap ? romDo
+	: cpuA[15:14] == 2'b01 ? sprDo
 	: ramD;
 
 //-------------------------------------------------------------------------------------------------
 
-assign ramWe = cpuWe;
-assign ramD  = cpuWe ? 8'hZZ : cpuDi;
-assign ramA
-	= cpuA[15:13] == 3'b000 && divMap && divRam ? { 2'b10, 4'd3, cpuA[12:0] }
+assign ramWe = !(!cpuWe && (cpuA[15] || (cpuA[15:13] == 3'b001 && divMap)));
+assign ramD  = ramWe ? 8'hZZ : cpuDi;
+assign ramA =
+{
+	2'b00
+	, cpuA[15:13] == 3'b000 && divMap && divRam ? { 2'b10, 4'd3, cpuA[12:0] }
 	: cpuA[15:13] == 3'b001 && divMap ? { 2'b10, divPage, cpuA[12:0] }
-	: { 2'b00, 1'b0, cpuA };
+	: { 2'b00, 1'b0, cpuA }
+};
 
 //-------------------------------------------------------------------------------------------------
 endmodule

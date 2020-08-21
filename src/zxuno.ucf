@@ -40,6 +40,15 @@ NET audio<0> LOC="P10"  | IOSTANDARD = LVCMOS33 | SLEW=FAST; # left
 NET ps2<1>   LOC="P98"  | IOSTANDARD = LVCMOS33 | SLEW=FAST | PULLUP; # keyboard data
 NET ps2<0>   LOC="P99"  | IOSTANDARD = LVCMOS33 | SLEW=FAST | PULLUP; # keyboard clock
 
+# Joystick ####################################################################
+
+NET joys<5>  LOC="P8"   | IOSTANDARD = LVCMOS33 | PULLUP; # fire 2
+NET joys<4>  LOC="P2"   | IOSTANDARD = LVCMOS33 | PULLUP; # fire 1
+NET joys<3>  LOC="P1"   | IOSTANDARD = LVCMOS33 | PULLUP; # up
+NET joys<2>  LOC="P5"   | IOSTANDARD = LVCMOS33 | PULLUP; # down
+NET joys<1>  LOC="P6"   | IOSTANDARD = LVCMOS33 | PULLUP; # left
+NET joys<0>  LOC="P7"   | IOSTANDARD = LVCMOS33 | PULLUP; # right
+
 # SD/MMC ##########################################################################################
 
 NET spiCs    LOC="P59"  | IOSTANDARD = LVCMOS33 | SLEW=FAST; # cs

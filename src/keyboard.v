@@ -6,6 +6,7 @@ module keyboard
 	input  wire      ce,
 	input  wire[1:0] ps2,
 	output wire      reset,
+	output wire      boot,
 	output wire      nmi,
 	output wire[4:0] do,
 	input  wire[7:0] a
@@ -72,8 +73,14 @@ end
 reg pressed = 1'b0;
 
 reg F5;  // nmi
+reg F11; // boot
 reg F12; // reset
 reg[4:0] key[7:0];
+
+wire ctrl = key[7][1];
+reg alt;
+reg del;
+reg bs;
 
 initial begin
 	key[0] = 5'b11111;
@@ -86,7 +93,12 @@ initial begin
 	key[7] = 5'b11111;
 
 	F5 = 1'b1;
+	F11 = 1'b1;
 	F12 = 1'b1;
+
+	alt = 1'b1;
+	del = 1'b1;
+	bs = 1'b1;
 end
 
 always @(posedge clock) if(ce)
@@ -97,7 +109,11 @@ if(received)
 		pressed <= 1'b0;
 
 		case(scancode)
+			8'h11: alt <= pressed; // right alt
+			8'h71: del <= pressed; // right del
+
 			8'h12: key[0][0] <= pressed; // CS - left shift
+			8'h59: key[0][0] <= pressed; // CS - left shift
 			8'h1A: key[0][1] <= pressed; // Z
 			8'h22: key[0][2] <= pressed; // X
 			8'h21: key[0][3] <= pressed; // C
@@ -140,7 +156,7 @@ if(received)
 			8'h33: key[6][4] <= pressed; // H
 
 			8'h29: key[7][0] <= pressed; // SPACE
-			8'h59: key[7][1] <= pressed; // SS - right shift
+			8'h14: key[7][1] <= pressed; // SS - right shift
 			8'h3A: key[7][2] <= pressed; // M
 			8'h31: key[7][3] <= pressed; // N
 			8'h32: key[7][4] <= pressed; // B
@@ -157,9 +173,11 @@ if(received)
 			8'h6B: { key[0][0], key[3][4] } <= { 2{pressed} }; // left (CS + 5)
 			8'h74: { key[0][0], key[4][2] } <= { 2{pressed} }; // right (CS + 8)
 			8'h76: { key[0][0], key[7][0] } <= { 2{pressed} }; // esc (CS + SPACE) - break
-			8'h66: { key[0][0], key[4][0] } <= { 2{pressed} }; // backspace (CS + 0) - delete
+
+			8'h66: { key[0][0], key[4][0], bs } <= { 3{pressed} }; // backspace (CS + 0) - delete
 
 			8'h03: F5  <= pressed; // F5
+			8'h78: F11 <= pressed; // F11
 			8'h07: F12 <= pressed; // F12
 		endcase
 	end
@@ -176,7 +194,8 @@ assign do =
 };
 
 assign nmi = F5;
-assign reset = F12;
+assign boot = F11 && (ctrl|alt|bs);
+assign reset = F12 && (ctrl|alt|del);
 
 //-------------------------------------------------------------------------------------------------
 endmodule
